@@ -58,11 +58,12 @@ public class XlsExtractor extends Extractor {
 
     @Override
     public Dataset<Row> nextBatch() {
-        SparkSession session = SparkSession.getActiveSession().get();
-        Dataset<Row> returnable = session
-                .createDataFrame(Arrays.asList(dataset.take(batchSize)), dataset.schema());
-        // TODO
-        rowOffset++;
-        return returnable;
+        return null;
+//        SparkSession session = SparkSession.getActiveSession().get();
+//        Dataset<Row> returnable = session
+//                .createDataFrame(Arrays.asList(dataset.take(batchSize)), dataset.schema());
+//        // TODO
+//        rowOffset++;
+//        return returnable;
     }
 }
