@@ -27,7 +27,7 @@
         <!-- Snake YAML -->
         <snake.version>1.17</snake.version>
         <!-- Log4J2  -->
-        <log4j2.version>2.10</log4j2.version>
+        <log4j2.version>2.10.0</log4j2.version>
         <!-- Frameworks -->
         <!-- Maven -->
         <maven.version>3.3</maven.version>
