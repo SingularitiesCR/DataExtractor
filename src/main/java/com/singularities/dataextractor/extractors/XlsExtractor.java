@@ -1,10 +1,7 @@
 package com.singularities.dataextractor.extractors;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
-
-import java.util.Arrays;
+import org.apache.spark.sql.*;
+import scala.Tuple2;
 
 public class XlsExtractor extends Extractor {
 
@@ -20,35 +17,46 @@ public class XlsExtractor extends Extractor {
     /**
      * Constructor of Data extractor for XLS files
      * @param filename
-     * @param Sheet
+     * @param sheet
      * @param header
      */
-    public XlsExtractor(String filename, String Sheet, boolean header) {
-        load(filename, Sheet, header);
+    public XlsExtractor(String filename, String sheet, boolean header) {
+        load(filename, sheet, header);
     }
 
     /**
      * Constructor of Data extractor for XLS files
      * @param filename
-     * @param Sheet
+     * @param sheet
      * @param header
      * @param batchSize
      */
-    public XlsExtractor(String filename, String Sheet, boolean header, int batchSize) {
+    public XlsExtractor(String filename, String sheet, boolean header, int batchSize) {
         this.batchSize = batchSize;
-        load(filename, Sheet, header);
+        load(filename, sheet, header);
     }
 
     /**
      * Loads an XLS file to a Dataset
      * @param filename
-     * @param Sheet
+     * @param sheet
      * @param header
      */
-    public void load(String filename, String Sheet, boolean header) {
-        dataset = SparkSession.getActiveSession().get().read()
+    public void load(String filename, String sheet, boolean header) {
+        SparkSession session = SparkSession.getActiveSession().get();
+        this.load(filename, sheet, header, session);
+    }
+
+    /**
+     * Loads an XLS file to a Dataset
+     * @param filename
+     * @param sheet
+     * @param header
+     */
+    public void load(String filename, String sheet, boolean header, SparkSession session) {
+        dataset = session.read()
             .format("com.crealytics.spark.excel")
-            .option("sheetName", Sheet)
+            .option("sheetName", sheet)
             .option("useHeader", header)
             .option("treatEmptyValuesAsNulls", DEFAULT_EMPTY_NULLS)
             .option("inferSchema", DEFAULT_INFER_SCHEMA)
@@ -58,10 +66,15 @@ public class XlsExtractor extends Extractor {
 
     @Override
     public Dataset<Row> nextBatch() {
-        SparkSession session = SparkSession.getActiveSession().get();
-        Dataset<Row> returnable = session
-                .createDataFrame(Arrays.asList(dataset.take(batchSize)), dataset.schema());
-        // TODO
+        SQLContext context = SparkSession.getActiveSession().get().sqlContext();
+        Dataset<Row> returnable = dataset.limit(batchSize);
+        long size = new Long(batchSize);
+        dataset = context.createDataFrame(dataset.javaRDD()
+            .zipWithIndex()
+            .filter(r -> r._2() >= size)
+            .map(Tuple2::_1),
+            dataset.schema()
+        );
         rowOffset++;
         return returnable;
     }
