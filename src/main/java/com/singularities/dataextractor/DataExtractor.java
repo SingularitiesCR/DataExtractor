@@ -16,15 +16,18 @@ public class DataExtractor {
 
     System.out.println(ManagementFactory.getRuntimeMXBean().getName());
 
-    Thread.sleep(20000);
+    Thread.sleep(10000);
     Properties connectionProperties = new Properties();
     connectionProperties.put("user", POSTGRES);
     connectionProperties.put("password", POSTGRES);
+    connectionProperties.put("socketTimeout", "15");
+
 
     SparkSession sparkSession = SparkSession.builder().master("local[1]").appName("ss").getOrCreate();
     sparkSession.sparkContext().setLogLevel("ERROR");
+    System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     Dataset<Row> dataset = sparkSession.read()
-        .jdbc("jdbc:postgresql://localhost:5432/postgres",
+        .jdbc("jdbc:postgresql://192.168.1.50:32772/postgres",
             "test_massive", connectionProperties);
 
     dataset.show(250000);
