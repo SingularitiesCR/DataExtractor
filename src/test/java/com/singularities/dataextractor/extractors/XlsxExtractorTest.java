@@ -25,8 +25,8 @@ class XlsxExtractorTest {
 
     @BeforeEach
     void setUp() {
-        SparkSession session = SparkSession.builder().master("local[*]").appName("XLS Test").getOrCreate();
-        SparkSession.setActiveSession(session);
+        SparkSession session = SparkSession.builder().master("local[*]").appName("XLSX Test").getOrCreate();
+//        SparkSession.setActiveSession(session);
         session.sparkContext().setLogLevel("ERROR");
         extractor = new XlsxExtractor();
         extractor.setBatchSize(10);
@@ -34,7 +34,7 @@ class XlsxExtractorTest {
 
     @Test
     void load() throws FileNotFoundException {
-        filename = getFilename("data.xls");
+        filename = getFilename("data.xlsx");
         extractor.load(filename, "Sheet1", true);
         assertNotNull(extractor.getSchema());
     }
