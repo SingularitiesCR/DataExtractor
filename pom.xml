@@ -53,7 +53,8 @@
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
-        <!-- <maven-sunfire-plugin.version>2.20.1</maven-sunfire-plugin.version> Memory leac according to junit-->
+
+        <!-- <maven-sunfire-plugin.version>2.20.1</maven-sunfire-plugin.version> Memory leak according to junit-->
         <maven-sunfire-plugin.version>2.19.1</maven-sunfire-plugin.version>
         <junit-platform-surefire-provider.version>1.0.3</junit-platform-surefire-provider.version>
     </properties>
