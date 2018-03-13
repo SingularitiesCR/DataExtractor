@@ -27,7 +27,7 @@
         <!-- Snake YAML -->
         <snake.version>1.17</snake.version>
         <!-- Log4J2  -->
-        <log4j2.version>2.10</log4j2.version>
+        <log4j2.version>2.10.0</log4j2.version>
         <!-- Frameworks -->
         <!-- Maven -->
         <maven.version>3.3</maven.version>
@@ -53,7 +53,8 @@
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
-        <!-- <maven-sunfire-plugin.version>2.20.1</maven-sunfire-plugin.version> Memory leac according to junit-->
+
+        <!-- <maven-sunfire-plugin.version>2.20.1</maven-sunfire-plugin.version> Memory leak according to junit-->
         <maven-sunfire-plugin.version>2.19.1</maven-sunfire-plugin.version>
         <junit-platform-surefire-provider.version>1.0.3</junit-platform-surefire-provider.version>
     </properties>
@@ -150,6 +151,11 @@
             <artifactId>junit-jupiter-api</artifactId>
             <version>5.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+            <version>1.20.0</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
@@ -196,6 +202,16 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 </project>
     
