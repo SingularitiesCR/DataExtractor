@@ -13,16 +13,18 @@ import java.util.stream.IntStream;
 public abstract class LineReaderExtractor extends Extractor {
 
     protected StructType schema;
+    protected int size;
 
-    private StructType getSchema(int size) {
-        if (schema != null) {
-            return schema;
+    private StructType getSchema() {
+        if (schema == null) {
+            schema = new StructType(IntStream.rangeClosed(0, size - 1)
+                .boxed()
+                .map(i -> new StructField("H" + i, DataTypes.StringType, false, Metadata.empty()))
+                .toArray(StructField[]::new));
+
         }
-        schema = new StructType(IntStream.rangeClosed(0, size - 1)
-            .boxed()
-            .map(i -> new StructField("H" + i, DataTypes.StringType, false, Metadata.empty()))
-            .toArray(StructField[]::new));
-        return  schema;
+        return schema;
+
     }
 
     public abstract boolean hasNext();
@@ -31,26 +33,16 @@ public abstract class LineReaderExtractor extends Extractor {
 
     private Dataset<Row> readBatch() {
         List<Row> batch = new ArrayList<>();
-        int size = 1;
         while (hasNext() && batch.size() < batchSize) {
             Row row = readNext();
             batch.add(row);
-            size = row.size();
         }
-        SQLContext context = SparkSession.getActiveSession().get().sqlContext();
-        return context.createDataFrame(
-                batch, getSchema(size)
-        );
+
+        return sparkSession.createDataFrame(batch, getSchema());
     }
 
     @Override
     public Dataset<Row> nextBatch() {
-        Dataset<Row> returnable = readBatch();
-        rowOffset++;
-        return returnable;
-    }
-
-    public StructType getSchema() {
-        return schema;
+        return readBatch();
     }
 }

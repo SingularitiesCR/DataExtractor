@@ -80,6 +80,9 @@ public class XlsxExtractor extends LineReaderExtractor {
     public Row readNext() {
         List<String> cells = new ArrayList<>();
         iterator.next().iterator().forEachRemaining(c -> cells.add(c.getStringCellValue()));
+        if (size < 0){
+            size = cells.size();
+        }
         return RowFactory.create(cells.toArray());
     }
 

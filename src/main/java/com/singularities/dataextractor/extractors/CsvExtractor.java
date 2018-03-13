@@ -51,8 +51,8 @@ public class CsvExtractor extends LineReaderExtractor {
 
     @Override
     public Row readNext() {
-        Row toReturn = RowFactory.create((Object[]) next.split(separator));
-        rowOffset++;
+        String[] split = next.split(separator);
+        Row toReturn = RowFactory.create((Object[]) split);
         try {
             next = reader.readLine();
         } catch (IOException e) {
