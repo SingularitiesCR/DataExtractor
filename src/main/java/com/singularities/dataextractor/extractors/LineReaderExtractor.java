@@ -13,9 +13,10 @@ import java.util.stream.IntStream;
 public abstract class LineReaderExtractor extends Extractor {
 
     protected StructType schema;
+    protected boolean hasHeader;
     protected int size;
 
-    private StructType getSchema() {
+    public StructType getSchema() {
         if (schema == null) {
             schema = new StructType(IntStream.rangeClosed(0, size - 1)
                 .boxed()
