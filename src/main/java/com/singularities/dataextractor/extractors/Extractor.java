@@ -6,7 +6,8 @@ import org.apache.spark.sql.SparkSession;
 
 public abstract class Extractor {
 
-    protected int batchSize = 128;
+    public static final int DEFAULT_BATCH = 128;
+    protected int batchSize;
     protected SparkSession sparkSession;
 
     /**
@@ -15,12 +16,8 @@ public abstract class Extractor {
      */
     public abstract Dataset<Row> nextBatch();
 
-
     public int getBatchSize() {
         return batchSize;
     }
 
-    public void setBatchSize(int batchSize) {
-        this.batchSize = batchSize;
-    }
 }

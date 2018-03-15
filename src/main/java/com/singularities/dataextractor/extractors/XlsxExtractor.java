@@ -83,7 +83,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
     private Iterator<String> sheets = null;
     private boolean hasHeader = false;
     private boolean allSheetsHaveHeader = false;
-    private int batchSize = 128;
+    private int batchSize = Extractor.DEFAULT_BATCH;
 
     public XlsxExtractor build() throws FileNotFoundException {
       return new XlsxExtractor(filename, sheets, hasHeader, allSheetsHaveHeader, batchSize);
