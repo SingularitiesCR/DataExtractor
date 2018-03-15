@@ -1,64 +1,69 @@
 package com.singularities.dataextractor.extractors;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-
 public class CsvExtractor extends LineReaderExtractor {
 
-    // Estimated bytes per line
-    protected final int DEFAULT_LINE_SIZE = 80;
-    private BufferedReader reader;
-    private String separator = ",";
-    private String next;
+  private Iterator<CSVRecord> iterator;
+  private CSVParser csvParser;
+
+  public CsvExtractor(String filename, CSVFormat format) throws IOException {
+    this(filename, format, Extractor.DEFAULT_BATCH);
+  }
+
+  public CsvExtractor(String filename, CSVFormat format, int batchSize) throws IOException {
+    this.sparkSession = SparkSession.builder().getOrCreate();
+    this.batchSize =  batchSize;
+    this.csvParser = new CSVParser(new FileReader(filename), format);
+    this.iterator = csvParser.iterator();
+    this.size = -1;
+  }
 
 
-    public CsvExtractor() {}
+  @Override
+  public boolean hasNext() {
+    return iterator.hasNext();
+  }
 
-    public CsvExtractor(String filename, boolean headers) throws FileNotFoundException {
-        load(filename, headers);
+  @Override
+  public Row readNext() {
+    CSVRecord next = iterator.next();
+    if (size < 0){
+      size = next.size();
+      Map<String, Integer> headerMap = csvParser.getHeaderMap();
+      if (headerMap != null) {
+        hasHeader = true;
+        ArrayList<Map.Entry<String, Integer>> entries = new ArrayList<>(headerMap
+            .entrySet());
+        entries.sort(Comparator.comparing(Map.Entry::getValue));
+        schema = new StructType(entries.stream().map(Map.Entry::getKey)
+            .map(c -> new StructField(c, DataTypes.StringType, false, Metadata.empty()))
+            .toArray(StructField[]::new));
+      } else {
+        hasHeader = false;
+        schema = getSchema();
+      }
     }
-
-    public void load(String filename, boolean headers) throws FileNotFoundException {
-        reader = new BufferedReader(new FileReader(filename), DEFAULT_LINE_SIZE * batchSize);
-        try {
-            next = reader.readLine();
-            if (headers) {
-                schema = new StructType(Lists.newArrayList(next.split(separator)).stream()
-                        .map(c -> new StructField(c, DataTypes.StringType, false, Metadata.empty()))
-                        .toArray(StructField[]::new));
-                next = reader.readLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    Object[] row = new Object[size];
+    for (int i = 0; i < size; i++) {
+      row[i] = next.get(i);
     }
-
-    @Override
-    public boolean hasNext() {
-        return !Strings.isNullOrEmpty(next);
-    }
-
-    @Override
-    public Row readNext() {
-        String[] split = next.split(separator);
-        Row toReturn = RowFactory.create((Object[]) split);
-        try {
-            next = reader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return toReturn;
-    }
+    return RowFactory.create(row);
+  }
 
 }
