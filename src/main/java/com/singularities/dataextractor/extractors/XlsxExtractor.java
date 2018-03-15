@@ -3,7 +3,9 @@ package com.singularities.dataextractor.extractors;
 import com.google.common.collect.Lists;
 import com.monitorjbl.xlsx.StreamingReader;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
@@ -14,76 +16,137 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class XlsxExtractor extends LineReaderExtractor {
+public final class XlsxExtractor extends LineReaderExtractor {
 
-    private Iterator<org.apache.poi.ss.usermodel.Row> iterator;
+  private Iterator<org.apache.poi.ss.usermodel.Row> iterator;
+  private final Iterator<String> sheets;
+  private final boolean allSheetsHaveHeader;
+  private final Workbook workbook;
 
-    /**
-     * Constructor without loading dataset
-     */
-    public XlsxExtractor() {}
+  private XlsxExtractor(String filename, Iterator<String> sheets, boolean hasHeader, boolean allSheetsHaveHeader,
+                        int batchSize) throws FileNotFoundException {
+    if (filename == null){
+      throw new IllegalArgumentException("Filename is not set");
+    }
+    if (sheets == null){
+      throw new IllegalArgumentException("Sheets is not set");
+    }
+    this.sparkSession =  SparkSession.builder().getOrCreate();
+    this.batchSize = batchSize;
+    this.hasHeader = hasHeader;
+    this.size = -1;
 
-    /**
-     * Constructor of Data extractor for XLS files
-     * @param filename
-     * @param sheet
-     * @param header
-     */
-    public XlsxExtractor(String filename, String sheet, boolean header) throws FileNotFoundException {
-        load(filename, sheet, header);
+    this.sheets = sheets;
+    this.allSheetsHaveHeader  = allSheetsHaveHeader;
+    InputStream stream = new FileInputStream(new File(filename));
+    workbook = StreamingReader.builder().rowCacheSize(batchSize).open(stream);
+    iterator = getNextRowIterator();
+    // Read schema
+    if (this.hasHeader) {
+      this.schema = new StructType(Lists.newArrayList(iterator.next().iterator()).stream()
+          .map(c -> new StructField(c.getStringCellValue(), DataTypes.StringType, false, Metadata.empty())).toArray(StructField[]::new));
+    }
+  }
+
+  @Override
+  public boolean hasNext() {
+    return iterator.hasNext() || sheets.hasNext();
+  }
+
+  @Override
+  public Row readNext() {
+    if (!iterator.hasNext()){
+      iterator = getNextRowIterator();
+      if (this.hasHeader && this.allSheetsHaveHeader){
+        //discard the header
+        iterator.next();
+      }
+    }
+    List<String> cells = new ArrayList<>();
+    iterator.next().iterator().forEachRemaining(c -> cells.add(c.getStringCellValue()));
+    if (size < 0){
+      size = cells.size();
+    }
+    return RowFactory.create(cells.toArray());
+  }
+
+  private Iterator<org.apache.poi.ss.usermodel.Row> getNextRowIterator() {
+    return workbook.getSheet(this.sheets.next()).rowIterator();
+  }
+
+  public static class XlsxExtractorBuilder {
+    private String filename = null;
+    private Iterator<String> sheets = null;
+    private boolean hasHeader = false;
+    private boolean allSheetsHaveHeader = false;
+    private int batchSize = 128;
+
+    public XlsxExtractor build() throws FileNotFoundException {
+      return new XlsxExtractor(filename, sheets, hasHeader, allSheetsHaveHeader, batchSize);
     }
 
-    /**
-     * Constructor of Data extractor for XLS files
-     * @param filename
-     * @param sheet
-     * @param header
-     * @param batchSize
-     */
-    public XlsxExtractor(String filename, String sheet, boolean header, int batchSize) throws FileNotFoundException {
-        this.batchSize = batchSize;
-        load(filename, sheet, header);
+    public XlsxExtractorBuilder setFilename(String filename) {
+      this.filename = filename;
+      return this;
     }
 
-    /**
-     * Loads an XLS file to a Dataset
-     * @param filename
-     * @param sheet
-     * @param header
-     */
-    public void load(String filename, String sheet, boolean header) throws FileNotFoundException {
-        InputStream stream = new FileInputStream(new File(filename));
-        Workbook workbook = StreamingReader.builder()
-                .rowCacheSize(batchSize)
-                .open(stream);
-        this.iterator = workbook.getSheet(sheet).rowIterator();
-        // Read schema
-        if (header) {
-            List<StructField> fields = Lists.newArrayList(this.iterator.next().iterator()).stream()
-                .map(c -> new StructField(c.getStringCellValue(), DataTypes.StringType, false, Metadata.empty()))
-                .collect(Collectors.toList());
-            schema = new StructType(fields.toArray(new StructField[fields.size()]));
-        }
-
+    public XlsxExtractorBuilder setSheets(Iterator<String> sheets) {
+      this.sheets = sheets;
+      return this;
     }
 
-    @Override
-    public boolean hasNext() {
-        return iterator.hasNext();
+    public XlsxExtractorBuilder setSheets(Iterable<String> sheets) {
+      this.sheets = sheets.iterator();
+      return this;
     }
 
-    @Override
-    public Row readNext() {
-        List<String> cells = new ArrayList<>();
-        iterator.next().iterator().forEachRemaining(c -> cells.add(c.getStringCellValue()));
-        if (size < 0){
-            size = cells.size();
-        }
-        return RowFactory.create(cells.toArray());
+    public XlsxExtractorBuilder setSheet(String sheet){
+      Collection<String> list = new ArrayList<>(1);
+      list.add(sheet);
+      this.sheets = list.iterator();
+      return this;
     }
+
+    public XlsxExtractorBuilder setHasHeader(boolean hasHeader) {
+      this.hasHeader = hasHeader;
+      return this;
+    }
+
+    public XlsxExtractorBuilder setAllSheetsHaveHeader(boolean allSheetsHaveHeader) {
+      this.allSheetsHaveHeader = allSheetsHaveHeader;
+      return this;
+    }
+
+    public XlsxExtractorBuilder setBatchSize(int batchSize) {
+      this.batchSize = batchSize;
+      return this;
+    }
+
+    public String getFilename() {
+      return filename;
+    }
+
+    public Iterator<String> getSheets() {
+      return sheets;
+    }
+
+    public boolean isHasHeader() {
+      return hasHeader;
+    }
+
+    public boolean isAllSheetsHaveHeader() {
+      return allSheetsHaveHeader;
+    }
+
+    public int getBatchSize() {
+      return batchSize;
+    }
+  }
+
+
 
 }
