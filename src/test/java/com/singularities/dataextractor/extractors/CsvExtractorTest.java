@@ -1,6 +1,7 @@
 package com.singularities.dataextractor.extractors;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Objects;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.spark.sql.Dataset;
@@ -37,7 +38,7 @@ class CsvExtractorTest {
   }
 
   @Test
-  void loadNoHeaders() throws IOException {
+  void loadNoHeaders() throws IOException, SQLException {
     filename = getFilename("noHeaders.csv");
     extractor = new CsvExtractor(filename, CSVFormat.DEFAULT.withSkipHeaderRecord());
     extractor.nextBatch();
@@ -49,7 +50,7 @@ class CsvExtractorTest {
   }
 
   @Test
-  void nextBatch() throws IOException {
+  void nextBatch() throws IOException, SQLException {
     filename = getFilename("data.csv");
     extractor = new CsvExtractor(filename, CSVFormat.DEFAULT.withHeader(), 10);
     Dataset<Row> batch = extractor.nextBatch();
@@ -60,19 +61,4 @@ class CsvExtractorTest {
     assertEquals("C", extractor.nextBatch().first().get(0));
     assertEquals(0, extractor.nextBatch().count());
   }
-
-
-  @Test
-  void memoryTest() throws IOException {
-    filename = getFilename("bigCsv.csv");
-    extractor = new CsvExtractor(filename, CSVFormat.DEFAULT, 1000);
-    Dataset<Row> batch = extractor.nextBatch();
-    long count = batch.count();
-    while (count > 0) {
-      System.out.println(count);
-      batch = extractor.nextBatch();
-      count = batch.count();
-    }
-  }
-
 }
