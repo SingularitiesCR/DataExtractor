@@ -138,8 +138,7 @@ public class SQLExtractor extends Extractor {
         String query, int fetchSize) throws SQLException {
       Connection conn = DriverManager.getConnection(url, connectionProperties);
       conn.setReadOnly(true);
-      Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet
-          .CONCUR_READ_ONLY);
+      Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
       statement.setFetchSize(fetchSize);
       resultSet = statement.executeQuery(query);
       batchSize = fetchSize;
