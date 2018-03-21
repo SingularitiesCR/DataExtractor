@@ -31,7 +31,7 @@ public class CsvExtractor extends LineReaderExtractor {
     this.batchSize =  batchSize;
     this.csvParser = new CSVParser(new FileReader(filename), format);
     this.iterator = csvParser.iterator();
-    this.size = -1;
+    this.rowWidth = -1;
   }
 
 
@@ -43,8 +43,8 @@ public class CsvExtractor extends LineReaderExtractor {
   @Override
   public Row readNext() {
     CSVRecord next = iterator.next();
-    if (size < 0){
-      size = next.size();
+    if (rowWidth < 0){
+      rowWidth = next.size();
       Map<String, Integer> headerMap = csvParser.getHeaderMap();
       if (headerMap != null) {
         hasHeader = true;
@@ -59,8 +59,8 @@ public class CsvExtractor extends LineReaderExtractor {
         schema = getSchema();
       }
     }
-    Object[] row = new Object[size];
-    for (int i = 0; i < size; i++) {
+    Object[] row = new Object[rowWidth];
+    for (int i = 0; i < rowWidth; i++) {
       row[i] = next.get(i);
     }
     return RowFactory.create(row);
