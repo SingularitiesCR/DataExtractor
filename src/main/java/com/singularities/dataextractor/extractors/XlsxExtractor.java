@@ -2,6 +2,14 @@ package com.singularities.dataextractor.extractors;
 
 import com.google.common.collect.Lists;
 import com.monitorjbl.xlsx.StreamingReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -10,15 +18,6 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
 
 public final class XlsxExtractor extends LineReaderExtractor {
 
@@ -38,7 +37,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
     this.sparkSession =  SparkSession.builder().getOrCreate();
     this.batchSize = batchSize;
     this.hasHeader = hasHeader;
-    this.size = -1;
+    this.rowWidth = -1;
 
     this.sheets = sheets;
     this.allSheetsHaveHeader  = allSheetsHaveHeader;
@@ -48,7 +47,8 @@ public final class XlsxExtractor extends LineReaderExtractor {
     // Read schema
     if (this.hasHeader) {
       this.schema = new StructType(Lists.newArrayList(iterator.next().iterator()).stream()
-          .map(c -> new StructField(c.getStringCellValue(), DataTypes.StringType, false, Metadata.empty())).toArray(StructField[]::new));
+          .map(c -> new StructField(sanitizeSparkName(c.getStringCellValue()), DataTypes.StringType, true, Metadata.empty())).toArray(StructField[]::new));
+      this.rowWidth = this.schema.length();
     }
   }
 
@@ -66,12 +66,21 @@ public final class XlsxExtractor extends LineReaderExtractor {
         iterator.next();
       }
     }
-    List<String> cells = new ArrayList<>();
-    iterator.next().iterator().forEachRemaining(c -> cells.add(c.getStringCellValue()));
-    if (size < 0){
-      size = cells.size();
+    org.apache.poi.ss.usermodel.Row localRow = iterator.next();
+    if (rowWidth < 0){
+      rowWidth = localRow.getLastCellNum();
     }
-    return RowFactory.create(cells.toArray());
+    Object[] acc = new Object[rowWidth];
+    for (int i = 0; i < rowWidth; i++) {
+      Cell cell = localRow.getCell(i);
+      if (cell == null){
+        acc[i] = null;
+      } else {
+        acc[i] = cell.getStringCellValue();
+      }
+
+    }
+    return RowFactory.create(acc);
   }
 
   private Iterator<org.apache.poi.ss.usermodel.Row> getNextRowIterator() {
