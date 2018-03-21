@@ -1,6 +1,5 @@
 package com.singularities.dataextractor.extractors;
 
-import com.google.common.collect.Lists;
 import com.monitorjbl.xlsx.StreamingReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,9 +24,11 @@ public final class XlsxExtractor extends LineReaderExtractor {
   private final Iterator<String> sheets;
   private final boolean allSheetsHaveHeader;
   private final Workbook workbook;
+  private final int numberSkipCols;
+  private final int numberSkipRows;
 
   private XlsxExtractor(String filename, Iterator<String> sheets, boolean hasHeader, boolean allSheetsHaveHeader,
-                        int batchSize) throws FileNotFoundException {
+                        int batchSize, String noColPrefix, int numberSkipCols, int numberSkipRows) throws FileNotFoundException {
     if (filename == null){
       throw new IllegalArgumentException("Filename is not set");
     }
@@ -44,11 +45,30 @@ public final class XlsxExtractor extends LineReaderExtractor {
     InputStream stream = new FileInputStream(new File(filename));
     workbook = StreamingReader.builder().rowCacheSize(batchSize).open(stream);
     iterator = getNextRowIterator();
+
+    this.numberSkipCols = numberSkipCols;
+    this.numberSkipRows = numberSkipRows;
+    skipRows();
     // Read schema
     if (this.hasHeader) {
-      this.schema = new StructType(Lists.newArrayList(iterator.next().iterator()).stream()
-          .map(c -> new StructField(sanitizeSparkName(c.getStringCellValue()), DataTypes.StringType, true, Metadata.empty())).toArray(StructField[]::new));
+      org.apache.poi.ss.usermodel.Row localRow = iterator.next();
+      int startIndex = this.numberSkipCols - 1;
+      int lastCellNum = localRow.getLastCellNum();
+      StructField[] acc = new StructField[lastCellNum - startIndex];
+
+      for (int i = startIndex, accIndex =0 ; i < lastCellNum; i++, accIndex++) {
+        Cell cell = localRow.getCell(i);
+        String name = cell == null ? noColPrefix + i : cell.getStringCellValue();
+        acc[accIndex] = new StructField(sanitizeSparkName(name), DataTypes.StringType, true, Metadata.empty());
+      }
+      this.schema = new StructType(acc);
       this.rowWidth = this.schema.length();
+    }
+  }
+
+  private void skipRows() {
+    for (int i = 0; i < this.numberSkipRows; i++) {
+      iterator.next();
     }
   }
 
@@ -61,6 +81,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
   public Row readNext() {
     if (!iterator.hasNext()){
       iterator = getNextRowIterator();
+      skipRows();
       if (this.hasHeader && this.allSheetsHaveHeader){
         //discard the header
         iterator.next();
@@ -71,14 +92,10 @@ public final class XlsxExtractor extends LineReaderExtractor {
       rowWidth = localRow.getLastCellNum();
     }
     Object[] acc = new Object[rowWidth];
-    for (int i = 0; i < rowWidth; i++) {
+    int startIndex = this.numberSkipCols - 1;
+    for (int i = startIndex; i < rowWidth; i++) {
       Cell cell = localRow.getCell(i);
-      if (cell == null){
-        acc[i] = null;
-      } else {
-        acc[i] = cell.getStringCellValue();
-      }
-
+      acc[i] = cell == null ? null : cell.getStringCellValue();
     }
     return RowFactory.create(acc);
   }
@@ -88,14 +105,19 @@ public final class XlsxExtractor extends LineReaderExtractor {
   }
 
   public static class XlsxExtractorBuilder {
-    private String filename = null;
-    private Iterator<String> sheets = null;
+    private static final String COL_DEFAULT_NAME = "col";
+    private String filename;
+    private Iterator<String> sheets;
     private boolean hasHeader = false;
     private boolean allSheetsHaveHeader = false;
     private int batchSize = Extractor.DEFAULT_BATCH;
+    private String noColPrefix = COL_DEFAULT_NAME;
+    private int numberSkipCols = 0;
+    private int numberSkipRows = 0;
 
     public XlsxExtractor build() throws FileNotFoundException {
-      return new XlsxExtractor(filename, sheets, hasHeader, allSheetsHaveHeader, batchSize);
+      return new XlsxExtractor(filename, sheets, hasHeader, allSheetsHaveHeader, batchSize,
+          noColPrefix, numberSkipCols, numberSkipRows);
     }
 
     public XlsxExtractorBuilder setFilename(String filename) {
@@ -153,6 +175,33 @@ public final class XlsxExtractor extends LineReaderExtractor {
 
     public int getBatchSize() {
       return batchSize;
+    }
+
+    public String getNoColPrefix() {
+      return noColPrefix;
+    }
+
+    public XlsxExtractorBuilder setNoColPrefix(String noColPrefix) {
+      this.noColPrefix = noColPrefix;
+      return this;
+    }
+
+    public int getNumberSkipCols() {
+      return numberSkipCols;
+    }
+
+    public XlsxExtractorBuilder setNumberSkipCols(int numberSkipCols) {
+      this.numberSkipCols = numberSkipCols;
+      return this;
+    }
+
+    public int getNumberSkipRows() {
+      return numberSkipRows;
+    }
+
+    public XlsxExtractorBuilder setNumberSkipRows(int numberSkipRows) {
+      this.numberSkipRows = numberSkipRows;
+      return this;
     }
   }
 
