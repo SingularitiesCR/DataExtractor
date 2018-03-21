@@ -1,5 +1,9 @@
 package com.singularities.dataextractor.extractors;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -39,7 +43,7 @@ class XlsxExtractorTest {
   }
 
   @Test
-  void loadNoHeaders() throws FileNotFoundException {
+  void loadNoHeaders() throws FileNotFoundException, SQLException {
     filename = getFilename("noHeaders.xlsx");
     extractor = new XlsxExtractor.XlsxExtractorBuilder().setBatchSize(10).setFilename(filename)
         .setSheet(SHEET1).setHasHeader(false).build();
@@ -51,7 +55,7 @@ class XlsxExtractorTest {
   }
 
   @Test
-  void nextBatch() throws FileNotFoundException {
+  void nextBatch() throws FileNotFoundException, SQLException {
     filename = getFilename("data.xlsx");
     extractor = new XlsxExtractor.XlsxExtractorBuilder().setBatchSize(10).setFilename(filename)
         .setSheet(SHEET1).setHasHeader(true).build();
@@ -63,5 +67,4 @@ class XlsxExtractorTest {
     assertEquals("C", extractor.nextBatch().first().get(0));
     assertEquals(0, extractor.nextBatch().count());
   }
-
 }
