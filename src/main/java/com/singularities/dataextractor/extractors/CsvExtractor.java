@@ -52,7 +52,7 @@ public class CsvExtractor extends LineReaderExtractor {
             .entrySet());
         entries.sort(Comparator.comparing(Map.Entry::getValue));
         schema = new StructType(entries.stream().map(Map.Entry::getKey)
-            .map(c -> new StructField(c, DataTypes.StringType, false, Metadata.empty()))
+            .map(c -> new StructField(sanitizeSparkName(c), DataTypes.StringType, false, Metadata.empty()))
             .toArray(StructField[]::new));
       } else {
         hasHeader = false;
