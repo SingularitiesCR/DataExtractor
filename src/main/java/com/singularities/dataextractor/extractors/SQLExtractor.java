@@ -22,7 +22,7 @@ import org.apache.spark.sql.types.StructType;
  * Created by aleph on 3/19/18.
  * Singularities
  */
-public class SQLExtractor extends Extractor {
+public final class SQLExtractor extends Extractor {
 
   protected final JdbcDialect dialect;
   protected final ResultSet resultSet;
