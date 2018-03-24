@@ -1,5 +1,6 @@
 package com.singularities.dataextractor.control.parser.jackson.extractors;
 
+import com.singularities.dataextractor.control.parser.model.ParserExtractor;
 import com.singularities.dataextractor.extractors.XlsxExtractor;
 import java.io.FileNotFoundException;
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
  * Created by aleph on 3/22/18.
  * Singularities
  */
-public class JacksonXlsx {
+public class JacksonXlsx implements ParserExtractor {
   private String filename;
   private List<String> sheets;
   private Boolean hasHeader;
@@ -93,6 +94,7 @@ public class JacksonXlsx {
     this.numberSkipRows = numberSkipRows;
   }
 
+  @Override
   public XlsxExtractor createExtractor() throws FileNotFoundException {
     XlsxExtractor.XlsxExtractorBuilder builder = new XlsxExtractor
         .XlsxExtractorBuilder();
