@@ -1,12 +1,13 @@
 package com.singularities.dataextractor.control.parser.jackson.extractors;
 
+import com.singularities.dataextractor.control.parser.model.ParserExtractor;
 import com.singularities.dataextractor.extractors.CsvExtractor;
 import java.io.IOException;
 import java.util.List;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.QuoteMode;
 
-public class JacksonCsv {
+public class JacksonCsv implements ParserExtractor{
   private String filename;
   private Integer batchSize;
   private String defaultStyle;
@@ -308,6 +309,7 @@ public class JacksonCsv {
     return csvFormat;
   }
 
+  @Override
   public CsvExtractor createExtractor() throws IOException {
     CSVFormat csvFormat = decodeCSVFormat();
     return batchSize == null
