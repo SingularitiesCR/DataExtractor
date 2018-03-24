@@ -65,7 +65,7 @@ public final class SQLExtractor extends Extractor {
     if (rowWidth < 0){
       ResultSetMetaData metaData = resultSet.getMetaData();
       this.rowWidth =  metaData.getColumnCount();
-      this.schema = JdbcUtils.getSchema(resultSet, dialect);
+      this.schema = JdbcUtils.getSchema(resultSet, dialect, true);
     }
     Object[] objects = new Object[this.rowWidth];
     for (int i = 0; i < this.rowWidth; i++) {
@@ -96,6 +96,11 @@ public final class SQLExtractor extends Extractor {
 
     public SQLExtractorBuilder setDialect(JdbcDialect dialect) {
       this.dialect = dialect;
+      return this;
+    }
+
+    public SQLExtractorBuilder setDialect(String url){
+      this.dialect = JdbcDialects.get(url);
       return this;
     }
 
@@ -134,8 +139,8 @@ public final class SQLExtractor extends Extractor {
       return this;
     }
 
-    public SQLExtractorBuilder setResultSet(Connection connection, String url, Properties connectionProperties,
-        String query, int fetchSize) throws SQLException {
+    public SQLExtractorBuilder setResultSet(String url, Properties connectionProperties,
+                                            String query, int fetchSize) throws SQLException {
       Connection conn = DriverManager.getConnection(url, connectionProperties);
       conn.setReadOnly(true);
       Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
