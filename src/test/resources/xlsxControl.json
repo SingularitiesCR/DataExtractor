@@ -1,0 +1,6 @@
+{
+  "filename": "./target/test-classes/data.xlsx",
+  "batchSize": 200,
+  "hasHeader": true,
+  "sheets": ["Sheet1"]
+}

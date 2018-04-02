@@ -1,15 +1,21 @@
 package com.singularities.dataextractor.control.parser.jackson.extractors;
 
 import com.google.common.collect.Maps;
+import com.singularities.dataextractor.extractors.CsvExtractor;
 import com.singularities.dataextractor.extractors.SQLExtractor;
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -67,5 +73,20 @@ class JacksonSqlTest {
     int first = batch.first().getInt(0);
     assertEquals(1, first);
 
+  }
+
+  @Ignore
+  @Test
+  public void testControlFile() throws IOException, SQLException {
+    // TODO
+    SparkSession.builder().master("local[*]").appName("CSV Extractor").getOrCreate();
+    String path = Objects.requireNonNull(getClass().getClassLoader().getResource("sqlControl.json")).getPath();
+    ObjectMapper mapper = new ObjectMapper();
+    JacksonSql control;
+    control = mapper.readValue(new File(path), JacksonSql.class);
+    SQLExtractor extractor = control.createExtractor();
+    Dataset<Row> batch = extractor.nextBatch();
+    String first = batch.first().getString(0);
+    assertEquals("A", first);
   }
 }

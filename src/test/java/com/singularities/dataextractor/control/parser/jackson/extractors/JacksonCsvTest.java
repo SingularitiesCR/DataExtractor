@@ -1,6 +1,8 @@
 package com.singularities.dataextractor.control.parser.jackson.extractors;
 
 import com.singularities.dataextractor.extractors.CsvExtractor;
+
+import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -10,6 +12,7 @@ import org.apache.commons.csv.QuoteMode;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -85,6 +88,17 @@ class JacksonCsvTest {
     assertEquals("A", first);
   }
 
-
+  @Test
+  public void testControlFile() throws IOException, SQLException {
+    SparkSession.builder().master("local[*]").appName("CSV Extractor").getOrCreate();
+    String path = Objects.requireNonNull(getClass().getClassLoader().getResource("csvControl.json")).getPath();
+    ObjectMapper mapper = new ObjectMapper();
+    JacksonCsv control;
+    control = mapper.readValue(new File(path), JacksonCsv.class);
+    CsvExtractor extractor = control.createExtractor();
+    Dataset<Row> batch = extractor.nextBatch();
+    String first = batch.first().getString(0);
+    assertEquals("A", first);
+  }
 
 }
