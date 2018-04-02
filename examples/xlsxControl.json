@@ -1,0 +1,10 @@
+{
+  "filename": "filename.xlsx",
+  "batchSize": 200,
+  "hasHeader": true,
+  "sheets": ["Sheet1"],
+  "allSheetsHaveHeader": false,
+  "noColPrefix": "",
+  "numberSkipCols": 0,
+  "numberSkipRows": 0
+}
