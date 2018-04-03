@@ -56,7 +56,7 @@ public class Job {
     }
     String path = makePath();
     sparkSession.read().parquet(parts).write().parquet(path);
-    writer.uploadFolder(path, String.format("%s/%s", path, name));
+    writer.uploadFolder(path, String.format("%s/%s", this.path, name));
   }
 
   public void clear() throws IOException {

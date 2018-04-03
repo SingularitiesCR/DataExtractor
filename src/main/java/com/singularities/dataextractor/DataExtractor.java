@@ -3,7 +3,9 @@ package com.singularities.dataextractor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.singularities.dataextractor.control.model.Config;
+import com.singularities.dataextractor.control.parser.jackson.JacksonConfig;
 import com.singularities.dataextractor.control.parser.model.ParserConfig;
+import org.apache.spark.sql.SparkSession;
 
 import java.io.File;
 
@@ -27,7 +29,8 @@ public final class DataExtractor {
           throw new IllegalArgumentException("Format is not valid");
     }
     File file = new File(args[1]);
-    ParserConfig parserConfig = mapper.readValue(file, ParserConfig.class);
+    ParserConfig parserConfig = mapper.readValue(file, JacksonConfig.class);
+    SparkSession session = SparkSession.builder().master("local[*]").appName("Data Extractor").getOrCreate();
     Config config = parserConfig.createConfig();
     config.runJobs();
   }
