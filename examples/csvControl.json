@@ -1,0 +1,21 @@
+{
+  "filename": "filename.csv",
+  "batchSize": 250,
+  "defaultStyle": "DEFAULT",
+  "delimiter": ",",
+  "quoteChar": "",
+  "quoteMode": "",
+  "commentStart": "",
+  "escape": "",
+  "ignoreSurroundingSpaces": true,
+  "ignoreEmptyLines": true,
+  "recordSeparator": "",
+  "nullString": "",
+  "headerComments": [],
+  "header": [],
+  "skipHeaderRecord": false,
+  "allowMissingColumnNames": false,
+  "ignoreHeaderCase": false,
+  "trim": false,
+  "trailingDelimiter": false
+}
