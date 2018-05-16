@@ -9,20 +9,22 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
-import org.apache.spark.sql.SparkSession;
+
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
 import org.apache.spark.sql.execution.datasources.jdbc.JdbcUtils;
 import org.apache.spark.sql.jdbc.JdbcDialect;
 import org.apache.spark.sql.jdbc.JdbcDialects;
+import org.apache.spark.sql.types.DataType;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 /**
  * Created by aleph on 3/19/18.
  * Singularities
  */
-public class SQLExtractor extends Extractor {
+public final class SQLExtractor extends Extractor {
 
   protected final JdbcDialect dialect;
   protected final ResultSet resultSet;
@@ -43,7 +45,13 @@ public class SQLExtractor extends Extractor {
     for (int i = 0; i < batchSize && hasNext(); i++) {
       acc.add(readNext());
     }
-    return sparkSession.createDataFrame(acc, this.schema);
+    Dataset<Row> frame = sparkSession.createDataFrame(acc, this.schema);
+    for (StructField structField : this.schema.fields()) {
+      String name = structField.name();
+      frame = frame.withColumn(name, functions.col(name).cast(structField.dataType()));
+    }
+
+    return frame;
   }
 
   @Override
@@ -65,11 +73,43 @@ public class SQLExtractor extends Extractor {
     if (rowWidth < 0){
       ResultSetMetaData metaData = resultSet.getMetaData();
       this.rowWidth =  metaData.getColumnCount();
-      this.schema = JdbcUtils.getSchema(resultSet, dialect);
+      this.schema = JdbcUtils.getSchema(resultSet, dialect, true);
     }
     Object[] objects = new Object[this.rowWidth];
     for (int i = 0; i < this.rowWidth; i++) {
-      objects[i] = resultSet.getObject(i+1);
+      DataType dataType = schema.fields()[i].dataType();
+      if (dataType == DataTypes.IntegerType){
+        objects[i] = resultSet.getInt(i+1);
+      } else if (dataType == DataTypes.DoubleType){
+        objects[i] = resultSet.getDouble(i+1);
+      } else if (dataType == DataTypes.LongType){
+        objects[i] = resultSet.getLong(i+1);
+      } else if (dataType == DataTypes.FloatType){
+        objects[i] = resultSet.getFloat(i+1);
+      } else if (dataType == DataTypes.ShortType){
+        objects[i] = resultSet.getShort(i+1);
+      } else if (dataType == DataTypes.BinaryType){
+        objects[i] = resultSet.getBytes(i+1); // todo check
+      } else if (dataType == DataTypes.BooleanType){
+        objects[i] = resultSet.getBoolean(i+1);
+      } else if (dataType == DataTypes.ByteType){
+        objects[i] = resultSet.getByte(i+1);
+      } else if (dataType == DataTypes.DateType){
+        objects[i] = resultSet.getDate(i+1);
+      } else if (dataType == DataTypes.CalendarIntervalType){
+        objects[i] = resultSet.getObject(i+1); //todo fix in case of use
+      } else if (dataType == DataTypes.NullType){
+        objects[i] = resultSet.getObject(i+1); // todo fix in case of use
+      } else if (dataType == DataTypes.StringType){
+        objects[i] = resultSet.getString(i+1); //todo check case of N-string
+      } else if (dataType == DataTypes.TimestampType){
+        objects[i] = resultSet.getTimestamp(i+1);
+      } else {
+        System.err.println("Unable to detect type " + dataType.typeName() + " with known types");
+        objects[i] = resultSet.getObject(i+1);
+      }
+
+
     }
     hasNext = resultSet.next();
     return RowFactory.create(objects);
@@ -96,6 +136,11 @@ public class SQLExtractor extends Extractor {
 
     public SQLExtractorBuilder setDialect(JdbcDialect dialect) {
       this.dialect = dialect;
+      return this;
+    }
+
+    public SQLExtractorBuilder setDialect(String url){
+      this.dialect = JdbcDialects.get(url);
       return this;
     }
 
@@ -134,8 +179,8 @@ public class SQLExtractor extends Extractor {
       return this;
     }
 
-    public SQLExtractorBuilder setResultSet(Connection connection, String url, Properties connectionProperties,
-        String query, int fetchSize) throws SQLException {
+    public SQLExtractorBuilder setResultSet(String url, Properties connectionProperties,
+                                            String query, int fetchSize) throws SQLException {
       Connection conn = DriverManager.getConnection(url, connectionProperties);
       conn.setReadOnly(true);
       Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);

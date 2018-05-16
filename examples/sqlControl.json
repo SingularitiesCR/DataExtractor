@@ -1,0 +1,9 @@
+{
+  "jdbcUrl": "",
+  "connectionProperties": {
+    "propertyA": ""
+  },
+  "sqlQuery": "",
+  "sqlDialect": "",
+  "fetchSize": 100
+}
