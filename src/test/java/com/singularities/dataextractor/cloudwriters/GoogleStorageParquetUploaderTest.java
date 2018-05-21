@@ -46,7 +46,7 @@ class GoogleStorageParquetUploaderTest {
     assertNotNull(credentialPath);
     bucketName = System.getenv(BUCKET_NAME);
     assertNotNull(bucketName);
-    uploader = new GoogleStorageParquetUploader(bucketName, credentialPath);
+    uploader = new GoogleStorageParquetUploader(bucketName, credentialPath, false);
 
 
     storage = StorageOptions.newBuilder()
