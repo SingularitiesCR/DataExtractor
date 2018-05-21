@@ -32,6 +32,14 @@ public class JacksonGoogleStorage implements ParserWriter {
     this.credentialsFileLocation = credentialsFileLocation;
   }
 
+  public boolean getOverwrite() {
+    return overwrite;
+  }
+
+  public void setOverwrite(boolean overwrite) {
+    this.overwrite = overwrite;
+  }
+
   public GoogleStorageParquetUploader createWriter() throws IOException {
     if (bucketName == null){
       throw new IllegalArgumentException("Bucket name is required");

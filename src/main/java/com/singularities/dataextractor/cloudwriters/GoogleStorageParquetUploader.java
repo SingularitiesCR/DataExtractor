@@ -2,10 +2,8 @@ package com.singularities.dataextractor.cloudwriters;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.WriteChannel;
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.*;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -111,7 +109,9 @@ public class GoogleStorageParquetUploader implements CloudWriter{
   @Override
   public boolean uploadFolder(String folderLocation, final String targetLocation) throws IOException {
     boolean canWrite = true;
-    if (this.overwrite){
+    BlobId blobId = BlobId.of(bucketName, targetLocation);
+    Blob blob = storage.get(blobId);
+    if (blob != null && this.overwrite){
       canWrite = this.removeFolder(targetLocation);
       System.exit(1);
     }
