@@ -29,6 +29,7 @@ public class GoogleStorageParquetUploader implements CloudWriter{
 
   private String bucketName;
   private Storage storage;
+  private boolean overwrite;
 
   private static final String MIME = "application/octet-stream";
   private static final int BUFFER_SIZE = 4194304; // 4 MiB (1024*1024*64 bytes)
@@ -43,11 +44,13 @@ public class GoogleStorageParquetUploader implements CloudWriter{
    * Creates a Google Storage uploader
    * @param bucketName Name of the bucket
    * @param credentialsFileLocation Location of the credential file
+   * @param overwrite Write mode
    * @throws FileNotFoundException Inherit from FileInputStream
    * @throws IOException Inherit from ServiceAccountCredentials.fromStream
    */
-  public GoogleStorageParquetUploader(String bucketName, String credentialsFileLocation) throws FileNotFoundException, IOException {
+  public GoogleStorageParquetUploader(String bucketName, String credentialsFileLocation, boolean overwrite) throws FileNotFoundException, IOException {
     this.bucketName = bucketName;
+    this.overwrite = overwrite;
     this.storage = StorageOptions.newBuilder()
         .setCredentials(ServiceAccountCredentials.fromStream(new FileInputStream(credentialsFileLocation)))
         .build()
@@ -107,19 +110,40 @@ public class GoogleStorageParquetUploader implements CloudWriter{
    */
   @Override
   public boolean uploadFolder(String folderLocation, final String targetLocation) throws IOException {
-    return Files.walk(Paths.get(folderLocation))
-        .filter(path -> Files.isRegularFile(path))
-        .map(fileLocation -> {
-          try {
-            String location = fileLocation.toAbsolutePath().toString();
-            String name = String.format("%s/%s", targetLocation, Paths.get(folderLocation)
-                .relativize(fileLocation).toString());
-            return upload(location, name);
-          } catch (IOException e) {
-            e.printStackTrace();
-            logger.error(String.format("Unable to upload %s", fileLocation));
-            return false;
-          }
-        }).reduce((b1, b2) -> b1 && b2).orElse(false);
+    boolean canWrite = true;
+    if (this.overwrite){
+      canWrite = this.removeFolder(targetLocation);
+      System.exit(1);
+    }
+    if (canWrite){
+      return Files.walk(Paths.get(folderLocation))
+              .filter(path -> Files.isRegularFile(path))
+              .map(fileLocation -> {
+                try {
+                  String location = fileLocation.toAbsolutePath().toString();
+                  String name = String.format("%s/%s", targetLocation, Paths.get(folderLocation)
+                          .relativize(fileLocation).toString());
+                  return upload(location, name);
+                } catch (IOException e) {
+                  e.printStackTrace();
+                  logger.error(String.format("Unable to upload %s", fileLocation));
+                  return false;
+                }
+              }).reduce((b1, b2) -> b1 && b2).orElse(false);
+    }else{
+      return false;
+    }
+
+  }
+
+  private boolean removeFolder(final String targetLocation) {
+    BlobId blobId = BlobId.of(this.bucketName, targetLocation);
+      try {
+        return this.storage.delete(blobId);
+      } catch ( Exception e){
+        logger.error(e);
+        logger.error(String.format("Unable to delete the file %s in bucket %s", targetLocation, this.bucketName));
+        return false;
+      }
   }
 }

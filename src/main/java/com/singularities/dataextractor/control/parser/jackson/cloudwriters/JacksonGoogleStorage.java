@@ -8,10 +8,12 @@ import java.io.IOException;
 public class JacksonGoogleStorage implements ParserWriter {
   private String bucketName;
   private String credentialsFileLocation;
+  private boolean overwrite;
 
   public JacksonGoogleStorage() {
     bucketName = null;
     credentialsFileLocation = null;
+    overwrite = false;
   }
 
   public String getBucketName() {
@@ -37,6 +39,6 @@ public class JacksonGoogleStorage implements ParserWriter {
     if (credentialsFileLocation == null){
       throw new IllegalArgumentException("Credential File Location is required");
     }
-    return new GoogleStorageParquetUploader(bucketName, credentialsFileLocation);
+    return new GoogleStorageParquetUploader(bucketName, credentialsFileLocation, overwrite);
   }
 }
