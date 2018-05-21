@@ -109,15 +109,8 @@ public class GoogleStorageParquetUploader implements CloudWriter{
   @Override
   public boolean uploadFolder(String folderLocation, final String targetLocation) throws IOException {
     boolean canWrite = true;
-//    BlobId blobId = BlobId.of(bucketName, targetLocation);
-//    Blob blob = storage.get(blobId);
-//    if (blob != null && this.overwrite){
-//      canWrite = this.removeFolder(targetLocation);
-//      System.exit(1);
-//    }
     if (this.overwrite){
       canWrite = this.removeFolder(targetLocation);
-      System.exit(1);
     }
     if (canWrite){
       return Files.walk(Paths.get(folderLocation))
@@ -135,6 +128,7 @@ public class GoogleStorageParquetUploader implements CloudWriter{
                 }
               }).reduce((b1, b2) -> b1 && b2).orElse(false);
     }else{
+      logger.error("Unable to delete previous directory. Upload error.");
       return false;
     }
 
@@ -142,7 +136,6 @@ public class GoogleStorageParquetUploader implements CloudWriter{
 
   private boolean removeFolder(final String targetLocation) {
       try {
-        Storage storage = StorageOptions.getDefaultInstance().getService();
         Iterable<Blob> blobs = storage.list(this.bucketName, Storage.BlobListOption.prefix(targetLocation)).iterateAll();
         for (Blob blob : blobs) {
           blob.delete(Blob.BlobSourceOption.generationMatch());
