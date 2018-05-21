@@ -109,9 +109,13 @@ public class GoogleStorageParquetUploader implements CloudWriter{
   @Override
   public boolean uploadFolder(String folderLocation, final String targetLocation) throws IOException {
     boolean canWrite = true;
-    BlobId blobId = BlobId.of(bucketName, targetLocation);
-    Blob blob = storage.get(blobId);
-    if (blob != null && this.overwrite){
+//    BlobId blobId = BlobId.of(bucketName, targetLocation);
+//    Blob blob = storage.get(blobId);
+//    if (blob != null && this.overwrite){
+//      canWrite = this.removeFolder(targetLocation);
+//      System.exit(1);
+//    }
+    if (this.overwrite){
       canWrite = this.removeFolder(targetLocation);
       System.exit(1);
     }
@@ -137,9 +141,13 @@ public class GoogleStorageParquetUploader implements CloudWriter{
   }
 
   private boolean removeFolder(final String targetLocation) {
-    BlobId blobId = BlobId.of(this.bucketName, targetLocation);
       try {
-        return this.storage.delete(blobId);
+        Storage storage = StorageOptions.getDefaultInstance().getService();
+        Iterable<Blob> blobs = storage.list(this.bucketName, Storage.BlobListOption.prefix(targetLocation)).iterateAll();
+        for (Blob blob : blobs) {
+          blob.delete(Blob.BlobSourceOption.generationMatch());
+        }
+        return true;
       } catch ( Exception e){
         logger.error(e);
         logger.error(String.format("Unable to delete the file %s in bucket %s", targetLocation, this.bucketName));
