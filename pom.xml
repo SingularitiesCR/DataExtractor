@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.singularities</groupId>
     <artifactId>dataextractor</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <name>Data Extractor</name>
     <issueManagement>
@@ -60,6 +60,28 @@
         <maven-sunfire-plugin.version>2.21.0</maven-sunfire-plugin.version>
         <junit-platform-surefire-provider.version>1.2.0</junit-platform-surefire-provider.version>
     </properties>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>singularities-snapshot</id>
+            <url>s3://maven.singularities.com/snapshot</url>
+        </snapshotRepository>
+        <repository>
+            <id>singularities-release</id>
+            <url>s3://maven.singularities.com/release</url>
+        </repository>
+    </distributionManagement>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
     <dependencies>
         <!-- Google's Gson -->
         <dependency>
@@ -235,6 +257,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <configuration>
+                    <createSourcesJar>true</createSourcesJar>
                     <finalName>${project.artifactId}</finalName>
                     <filters>
                         <filter>
