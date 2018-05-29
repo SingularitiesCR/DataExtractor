@@ -1,0 +1,5 @@
+{
+  "filename": "./target/test-classes/data.csv",
+  "batchSize": 250,
+  "header": []
+}

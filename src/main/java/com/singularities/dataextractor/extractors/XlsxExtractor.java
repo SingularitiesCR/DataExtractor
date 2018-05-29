@@ -92,8 +92,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
       rowWidth = localRow.getLastCellNum();
     }
     Object[] acc = new Object[rowWidth];
-    int startIndex = this.numberSkipCols - 1;
-    for (int i = startIndex; i < rowWidth; i++) {
+    for (int i = this.numberSkipCols; i < rowWidth; i++) {
       Cell cell = localRow.getCell(i);
       acc[i] = cell == null ? null : cell.getStringCellValue();
     }
@@ -112,7 +111,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
     private boolean allSheetsHaveHeader = false;
     private int batchSize = Extractor.DEFAULT_BATCH;
     private String noColPrefix = COL_DEFAULT_NAME;
-    private int numberSkipCols = 0;
+    private int numberSkipCols = 0; 
     private int numberSkipRows = 0;
 
     public XlsxExtractor build() throws FileNotFoundException {

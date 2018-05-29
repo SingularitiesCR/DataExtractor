@@ -31,7 +31,6 @@ class SQLExtractorTest {
   private static SparkSession sparkSession;
   private static Properties connectionProperties;
 
-
   private static String database_table;
   private static String url;
 
@@ -49,6 +48,13 @@ class SQLExtractorTest {
     String database_pass = System.getenv(DATABASE_ENV_PASS);
     database_table = System.getenv(DATABASE_ENV_TABLE);
 
+    Assertions.assertNotNull(database_name);
+    Assertions.assertNotNull(database_host);
+    Assertions.assertNotNull(database_port);
+    Assertions.assertNotNull(database_user);
+    Assertions.assertNotNull(database_pass);
+    Assertions.assertNotNull(database_table);
+
     url = String.format("jdbc:postgresql://%s:%s/%s", database_host, database_port, database_name);
 
     connectionProperties = new Properties();
@@ -62,7 +68,7 @@ class SQLExtractorTest {
     Connection conn = DriverManager.getConnection(url, connectionProperties);
     String sql = String.format("select * from %s", database_table);
     SQLExtractor sqlExtractor = new SQLExtractor.SQLExtractorBuilder().setPostgresDialect()
-        .setResultSet(conn, url, connectionProperties, sql, 10000).build();
+        .setResultSet(url, connectionProperties, sql, 10000).build();
 
     List<Dataset<Row>> acc = new ArrayList<>();
     while (sqlExtractor.hasNext()){

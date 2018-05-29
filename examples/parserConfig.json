@@ -1,0 +1,50 @@
+{
+  "jobs": [
+    {
+      "writer": {
+        "type": "gcloud",
+        "bucketName": "BUCKET_NAME",
+        "credentialsFileLocation": "CREDENTIALS_FILE_LOCATION"
+      },
+      "extractor": {
+        "type": "csv",
+        "filename": "./target/test-classes/data.csv",
+        "batchSize": 250
+      },
+      "name": "csvTest",
+      "path": "/ChainedTest"
+    },
+    {
+      "writer": {
+        "type": "gcloud",
+        "bucketName": "BUCKET_NAME",
+        "credentialsFileLocation": "CREDENTIALS_FILE_LOCATION"
+      },
+      "extractor": {
+        "type": "xlsx",
+        "filename": "./target/test-classes/data.xlsx",
+        "batchSize": 200,
+        "hasHeader": true,
+        "sheets": ["Sheet1"]
+      },
+      "name": "xlsTest",
+      "path": "/ChainedTest"
+    },
+    {
+      "writer": {
+        "type": "gcloud",
+        "bucketName": "BUCKET_NAME",
+        "credentialsFileLocation": "CREDENTIALS_FILE_LOCATION"
+      },
+      "extractor": {
+        "type": "xlsx",
+        "filename": "./target/test-classes/noHeaders.xlsx",
+        "batchSize": 200,
+        "hasHeader": true,
+        "sheets": ["Sheet1"]
+      },
+      "name": "noHeadersXlsTest",
+      "path": "/ChainedTest"
+    }
+  ]
+}

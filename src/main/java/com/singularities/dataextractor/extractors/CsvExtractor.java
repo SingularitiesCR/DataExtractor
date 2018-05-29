@@ -17,7 +17,7 @@ import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-public class CsvExtractor extends LineReaderExtractor {
+public final class CsvExtractor extends LineReaderExtractor {
 
   private Iterator<CSVRecord> iterator;
   private CSVParser csvParser;
