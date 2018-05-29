@@ -52,7 +52,7 @@ public final class XlsxExtractor extends LineReaderExtractor {
     // Read schema
     if (this.hasHeader) {
       org.apache.poi.ss.usermodel.Row localRow = iterator.next();
-      int startIndex = this.numberSkipCols - 1;
+      int startIndex = this.numberSkipCols;
       int lastCellNum = localRow.getLastCellNum();
       StructField[] acc = new StructField[lastCellNum - startIndex];
 

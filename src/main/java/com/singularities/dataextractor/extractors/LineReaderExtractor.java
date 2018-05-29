@@ -21,7 +21,7 @@ public abstract class LineReaderExtractor extends Extractor {
     if (schema == null) {
       schema = new StructType(IntStream.rangeClosed(0, rowWidth - 1)
           .boxed()
-          .map(i -> new StructField("H" + i, DataTypes.StringType, false, Metadata.empty()))
+          .map(i -> new StructField("H" + i, DataTypes.StringType, true, Metadata.empty()))
           .toArray(StructField[]::new));
 
     }
