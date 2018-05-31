@@ -11,5 +11,4 @@ WORKDIR /usr/app
 COPY --from=build /usr/src/app/target/${ARTIFACT_NAME} .
 ENTRYPOINT [ \
   "java", "-cp", "${ARTIFACT_NAME}", \
-  "com.singularities.dataextractor.DataExtractor", \
-  "json", "data-extract.json" ]
+  "com.singularities.dataextractor.DataExtractor" ]
