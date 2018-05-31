@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+        http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.singularities</groupId>
     <artifactId>dataextractor</artifactId>
@@ -32,6 +34,8 @@
         <!-- Frameworks -->
         <!-- Maven -->
         <maven.version>3.3</maven.version>
+        <!-- Microsoft SQL JDBC -->
+        <mssql-jdbc.version>6.4.0.jre8</mssql-jdbc.version>
         <!-- Hadoop -->
         <hadoop.version>2.8.2</hadoop.version>
         <!-- Java -->
@@ -56,9 +60,9 @@
         <maven-shade-plugin.version>3.1.0</maven-shade-plugin.version>
         <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
-
         <maven-sunfire-plugin.version>2.21.0</maven-sunfire-plugin.version>
-        <junit-platform-surefire-provider.version>1.2.0</junit-platform-surefire-provider.version>
+        <junit-platform-surefire-provider.version>1.2.0
+        </junit-platform-surefire-provider.version>
     </properties>
     <dependencies>
         <!-- Google's Gson -->
@@ -94,13 +98,18 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.version}</version>
         </dependency>
-
         <!-- JUnit -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.version}</version>
             <scope>test</scope>
+        </dependency>
+        <!-- Microsoft SQL JDBC -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>${mssql-jdbc.version}</version>
         </dependency>
         <!-- Mockito -->
         <dependency>
@@ -154,7 +163,6 @@
             <artifactId>log4j-api</artifactId>
             <version>${log4j2.version}</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
@@ -179,33 +187,7 @@
     <build>
         <pluginManagement>
             <plugins>
-                <!--Todo: enable surefire-->
-                <!-- Surefire runs all Java tests -->
-                <!--<plugin>-->
-                    <!--<groupId>org.apache.maven.plugins</groupId>-->
-                    <!--<artifactId>maven-surefire-plugin</artifactId>-->
-                    <!--<version>${maven-sunfire-plugin.version}</version>-->
-                    <!--<dependencies>-->
-                        <!--<dependency>-->
-                            <!--<groupId>org.junit.platform</groupId>-->
-                            <!--<artifactId>junit-platform-surefire-provider</artifactId>-->
-                            <!--<version>${junit-platform-surefire-provider.version}</version>-->
-                        <!--</dependency>-->
-                    <!--</dependencies>-->
-                    <!--<configuration>-->
-                        <!--<includes>-->
-                            <!--<include>**/Test*.java</include>-->
-                            <!--<include>**/*Test.java</include>-->
-                            <!--<include>**/*TestCase.java</include>-->
-                            <!--<include>**/*Suite.java</include>-->
-                        <!--</includes>-->
-                        <!--<reportsDirectory>-->
-                            <!--${project.build.directory}/surefire-reports-->
-                        <!--</reportsDirectory>-->
-                        <!--<argLine>-Xmx10g -Xss4096k -XX:ReservedCodeCacheSize=512m</argLine>-->
-                        <!--<failIfNoTests>false</failIfNoTests>-->
-                    <!--</configuration>-->
-                <!--</plugin>-->
+                <!-- TODO Add surefire plugin -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
@@ -247,11 +229,11 @@
                         </filter>
                     </filters>
                     <transformers>
-                        <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                        <transformer implementation="org.apache.maven.plugins
+                        .shade.resource.ServicesResourceTransformer"/>
                     </transformers>
-                    <!-- IMPORTANT: Removes necessary Hadoop classes -->
-                    <!--<minimizeJar>true</minimizeJar>-->
-                    <promoteTransitiveDependencies>false</promoteTransitiveDependencies>
+                    <promoteTransitiveDependencies>false
+                    </promoteTransitiveDependencies>
                 </configuration>
                 <executions>
                     <execution>
