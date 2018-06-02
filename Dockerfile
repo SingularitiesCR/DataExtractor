@@ -1,14 +1,13 @@
 FROM maven:3.5-jdk-8 AS build
 WORKDIR /usr/src/app
-COPY pom.xml .
+COPY pom.xml pom.xml
 RUN mvn dependency:go-offline
-COPY src .
+COPY src src
 RUN mvn package
 
 FROM openjdk:8
-ENV ARTIFACT_NAME=dataextractor.jar
 WORKDIR /usr/app
-COPY --from=build /usr/src/app/target/${ARTIFACT_NAME} .
+COPY --from=build /usr/src/app/target/dataextractor.jar app.jar
 ENTRYPOINT [ \
-  "java", "-cp", "${ARTIFACT_NAME}", \
+  "java", "-cp", "app.jar", \
   "com.singularities.dataextractor.DataExtractor" ]
