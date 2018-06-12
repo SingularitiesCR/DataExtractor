@@ -102,7 +102,7 @@ public final class SQLExtractor extends Extractor {
       } else if (dataType == DataTypes.TimestampType){
         objects[i] = resultSet.getTimestamp(i+1);
       } else {
-        System.err.println("Unable to detect type " + dataType.typeName() + " with known types");
+//        System.err.println("Unable to detect type " + dataType.typeName() + " with known types");
         objects[i] = resultSet.getObject(i+1);
       }
     }
