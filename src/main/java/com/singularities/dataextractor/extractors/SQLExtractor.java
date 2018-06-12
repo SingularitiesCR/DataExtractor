@@ -9,6 +9,9 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -173,7 +176,13 @@ public final class SQLExtractor extends Extractor {
 
     public SQLExtractorBuilder setResultSet(String url, Properties connectionProperties,
                                             String query, int fetchSize) throws SQLException {
-      Connection conn = DriverManager.getConnection(url, connectionProperties);
+
+      HikariConfig config = new HikariConfig(connectionProperties);
+      config.setJdbcUrl(url);
+      HikariDataSource ds = new HikariDataSource(config);
+
+      Connection conn = ds.getConnection();
+//      Connection conn = DriverManager.getConnection(url, connectionProperties);
       conn.setReadOnly(true);
       Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
       statement.setFetchSize(fetchSize);

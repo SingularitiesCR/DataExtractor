@@ -183,6 +183,12 @@
             <artifactId>google-cloud-storage</artifactId>
             <version>1.20.0</version>
         </dependency>
+        <!--HikariCP: JDBC Connection Pool-->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>3.1.0</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
