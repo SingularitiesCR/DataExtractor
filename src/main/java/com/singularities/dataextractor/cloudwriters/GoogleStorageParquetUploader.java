@@ -65,6 +65,7 @@ public class GoogleStorageParquetUploader implements CloudWriter{
   @Override
   public boolean upload(String fileLocation, String targetLocation) throws IOException {
 
+    System.out.println("Uploading to: " + targetLocation);
     BlobId blobId = BlobId.of(this.bucketName, targetLocation);
     BlobInfo blobInfo = BlobInfo.newBuilder(blobId).setContentType(MIME).build();
     WriteChannel writeChannel = this.storage.writer(blobInfo);

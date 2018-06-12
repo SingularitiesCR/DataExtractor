@@ -44,6 +44,7 @@ public class Job {
     int currentPart = 0;
     List<String> partList = new ArrayList<>();
     while (extractor.hasNext()){
+      System.out.println(currentPart);
       String path = makePathPart(currentPart);
       partList.add(path);
       extractor.nextBatch().write().parquet(path);
