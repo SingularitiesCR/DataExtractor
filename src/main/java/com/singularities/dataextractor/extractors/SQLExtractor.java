@@ -30,16 +30,26 @@ import org.apache.spark.sql.types.StructType;
 public final class SQLExtractor extends Extractor {
 
   protected final JdbcDialect dialect;
-  protected final ResultSet resultSet;
+  protected ResultSet resultSet;
   protected boolean hasNext;
 
-  protected SQLExtractor(ResultSet resultSet, int batchSize, JdbcDialect dialect) {
+  protected final Properties properties;
+  protected final String jdbcUrl;
+  protected final String sqlQuery;
+  protected final int fetchSize;
+
+  protected SQLExtractor(ResultSet resultSet, int batchSize, JdbcDialect dialect, Properties properties,
+                         String jdbcUrl, String sqlQuery, int fetchSize) {
     this.batchSize = batchSize;
     this.sparkSession = SparkSession.builder().getOrCreate();
     this.resultSet = resultSet;
     this.rowWidth = -1;
     this.hasNext = false;
     this.dialect = dialect;
+    this.properties = properties;
+    this.jdbcUrl = jdbcUrl;
+    this.sqlQuery = sqlQuery;
+    this.fetchSize = fetchSize;
   }
 
   @Override
@@ -72,6 +82,14 @@ public final class SQLExtractor extends Extractor {
       this.rowWidth =  metaData.getColumnCount();
       this.schema = JdbcUtils.getSchema(resultSet, dialect, true);
     }
+
+    System.out.println(resultSet.getRow());
+
+    // Just simulating an error fetching a line
+    if ( resultSet.getRow() == 35 ){
+      this.resetResultSet();
+    }
+
     Object[] objects = new Object[this.rowWidth];
     for (int i = 0; i < this.rowWidth; i++) {
       DataType dataType = schema.fields()[i].dataType();
@@ -110,13 +128,32 @@ public final class SQLExtractor extends Extractor {
     return RowFactory.create(objects);
   }
 
+  void resetResultSet() throws SQLException{
+    System.out.println("Simulated error, recreating connection.");
+    int actualRow = this.resultSet.getRow();
+    Connection conn = DriverManager.getConnection(this.jdbcUrl, this.properties);
+    conn.setReadOnly(true);
+    Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+    statement.setFetchSize(fetchSize);
+    this.resultSet = statement.executeQuery(this.sqlQuery);
+
+    while(this.resultSet.getRow() < actualRow){
+      this.resultSet.next();
+    }
+
+  }
+
   public static final class SQLExtractorBuilder{
     private ResultSet resultSet;
     private int batchSize;
     private JdbcDialect dialect;
+    private Properties properties;
+    String jdbcUrl;
+    String sqlQuery;
+    int fetchSize;
 
     public SQLExtractor build(){
-      return new SQLExtractor(resultSet, batchSize, dialect);
+      return new SQLExtractor(resultSet, batchSize, dialect, properties, jdbcUrl, sqlQuery, fetchSize);
     }
 
     public SQLExtractorBuilder setResultSet(ResultSet resultSet) {
@@ -177,12 +214,7 @@ public final class SQLExtractor extends Extractor {
     public SQLExtractorBuilder setResultSet(String url, Properties connectionProperties,
                                             String query, int fetchSize) throws SQLException {
 
-      HikariConfig config = new HikariConfig(connectionProperties);
-      config.setJdbcUrl(url);
-      HikariDataSource ds = new HikariDataSource(config);
-
-      Connection conn = ds.getConnection();
-//      Connection conn = DriverManager.getConnection(url, connectionProperties);
+      Connection conn = DriverManager.getConnection(url, connectionProperties);
       conn.setReadOnly(true);
       Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
       statement.setFetchSize(fetchSize);
@@ -190,5 +222,26 @@ public final class SQLExtractor extends Extractor {
       batchSize = fetchSize;
       return this;
     }
+
+    public SQLExtractorBuilder setProperties(Properties properties){
+      this.properties = properties;
+      return this;
+    }
+
+    public SQLExtractorBuilder setJdbUrl(String jdbcUrl){
+      this.jdbcUrl = jdbcUrl;
+      return this;
+    }
+
+    public SQLExtractorBuilder setSqlQuery(String sqlQuery){
+      this.sqlQuery = sqlQuery;
+      return this;
+    }
+
+    public SQLExtractorBuilder setFetchSize(int fetchSize){
+      this.fetchSize = fetchSize;
+      return this;
+    }
+
   }
 }

@@ -109,6 +109,11 @@ public class JacksonSql implements ParserExtractor {
       throw new IllegalArgumentException("SQL query is required");
     }
     int bz = this.fetchSize == null ? defaultFetchSize : this.fetchSize;
+
+    sqlExtractorBuilder.setProperties(decodeConectionProperties());
+    sqlExtractorBuilder.setJdbUrl(jdbcUrl);
+    sqlExtractorBuilder.setSqlQuery(sqlQuery);
+    sqlExtractorBuilder.setFetchSize(bz);
     sqlExtractorBuilder.setResultSet(jdbcUrl, decodeConectionProperties(), sqlQuery, bz);
     return decodeDialect(sqlExtractorBuilder).build();
   }

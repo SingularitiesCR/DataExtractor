@@ -47,6 +47,10 @@ public class Job {
       System.out.println(currentPart);
       String path = makePathPart(currentPart);
       partList.add(path);
+
+
+
+
       extractor.nextBatch().write().parquet(path);
       currentPart++;
     }
