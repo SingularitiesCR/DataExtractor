@@ -32,6 +32,7 @@ public final class SQLExtractor extends Extractor {
   protected final JdbcDialect dialect;
   protected ResultSet resultSet;
   protected boolean hasNext;
+  protected int retries;
 
   protected final Properties properties;
   protected final String jdbcUrl;
@@ -50,10 +51,12 @@ public final class SQLExtractor extends Extractor {
     this.jdbcUrl = jdbcUrl;
     this.sqlQuery = sqlQuery;
     this.fetchSize = fetchSize;
+    this.retries = 0;
   }
 
   @Override
   public Dataset<Row> nextBatch() throws SQLException {
+    this.retries = 0;
     List<Row> acc = new ArrayList<>(batchSize);
     for (int i = 0; i < batchSize && hasNext(); i++) {
       acc.add(readNext());
@@ -88,6 +91,7 @@ public final class SQLExtractor extends Extractor {
     // Just simulating an error fetching a line
     if ( resultSet.getRow() == 35 ){
       this.resetResultSet();
+      this.retries++;
     }
 
     Object[] objects = new Object[this.rowWidth];
@@ -130,6 +134,7 @@ public final class SQLExtractor extends Extractor {
 
   void resetResultSet() throws SQLException{
     System.out.println("Simulated error, recreating connection.");
+    System.out.println("Retries: " + this.retries);
     int actualRow = this.resultSet.getRow();
     Connection conn = DriverManager.getConnection(this.jdbcUrl, this.properties);
     conn.setReadOnly(true);
