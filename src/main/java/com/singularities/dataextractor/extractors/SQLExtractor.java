@@ -31,6 +31,7 @@ public final class SQLExtractor extends Extractor {
   protected ResultSet resultSet;
   protected boolean hasNext;
   protected int retries;
+  protected int currentRow;
 
   protected final Properties properties;
   protected final String jdbcUrl;
@@ -79,6 +80,8 @@ public final class SQLExtractor extends Extractor {
   @Override
   protected Row readNext() throws SQLException {
     try {
+
+      currentRow = this.resultSet.getRow();
 
       if (rowWidth < 0) {
         ResultSetMetaData metaData = resultSet.getMetaData();
@@ -137,14 +140,13 @@ public final class SQLExtractor extends Extractor {
   void resetResultSet() throws SQLException{
     System.out.println("Simulated error, recreating connection.");
     System.out.println("Retries: " + this.retries);
-    int actualRow = this.resultSet.getRow();
     Connection conn = DriverManager.getConnection(this.jdbcUrl, this.properties);
     conn.setReadOnly(true);
     Statement statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
     statement.setFetchSize(fetchSize);
     this.resultSet = statement.executeQuery(this.sqlQuery);
 
-    while(this.resultSet.getRow() < actualRow){
+    while(this.resultSet.getRow() < this.currentRow){
       this.resultSet.next();
     }
 
