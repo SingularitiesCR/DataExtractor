@@ -129,16 +129,17 @@ public final class SQLExtractor extends Extractor {
 
     } catch (SQLException e){
       if (retries > 3){
-        throw new RuntimeException("Max Retries", e);
+        throw new RuntimeException("Max Retries Exceeded", e);
       }
-      this.resetResultSet();
       this.retries++;
+      this.resetResultSet();
       return this.readNext();
     }
   }
 
   void resetResultSet() throws SQLException{
-    System.out.println("Simulated error, recreating connection.");
+    System.out.println("Error before fetching row: " + currentRow);
+    System.out.println("Connection error, recreating connection.");
     System.out.println("Retries: " + this.retries);
     Connection conn = DriverManager.getConnection(this.jdbcUrl, this.properties);
     conn.setReadOnly(true);
@@ -146,7 +147,9 @@ public final class SQLExtractor extends Extractor {
     statement.setFetchSize(fetchSize);
     this.resultSet = statement.executeQuery(this.sqlQuery);
 
+    System.out.println("Fast forwarding to last row: " + currentRow);
     while(this.resultSet.getRow() < this.currentRow){
+      System.out.println("Skipping row: " + resultSet.getRow());
       this.resultSet.next();
     }
 
