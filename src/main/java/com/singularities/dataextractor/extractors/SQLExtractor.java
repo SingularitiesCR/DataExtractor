@@ -10,8 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
@@ -87,14 +85,6 @@ public final class SQLExtractor extends Extractor {
         this.rowWidth = metaData.getColumnCount();
         this.schema = JdbcUtils.getSchema(resultSet, dialect, true);
       }
-
-      System.out.println(resultSet.getRow());
-
-      // Just simulating an error fetching a line
-//    if ( resultSet.getRow() == 35 ){
-//      this.resetResultSet();
-//      this.retries++;
-//    }
 
       Object[] objects = new Object[this.rowWidth];
       for (int i = 0; i < this.rowWidth; i++) {
