@@ -138,6 +138,7 @@ public final class SQLExtractor extends Extractor {
   }
 
   void resetResultSet() throws SQLException{
+    double percentage = 0.1;
     System.out.println("Error before fetching row: " + currentRow);
     System.out.println("Connection error, recreating connection.");
     System.out.println("Retries: " + this.retries);
@@ -149,9 +150,15 @@ public final class SQLExtractor extends Extractor {
 
     System.out.println("Fast forwarding to last row: " + currentRow);
     while(this.resultSet.getRow() < this.currentRow){
-      System.out.println("Skipping row: " + resultSet.getRow());
+      if (this.resultSet.getRow() > this.currentRow * percentage){
+        System.out.println("Fast forward: " + percentage*100 + "/100");
+        percentage+=0.1;
+      }
       this.resultSet.next();
     }
+    System.out.println("Fast forward: 100/100");
+    System.out.println("Done: " + currentRow);
+    System.out.println("Resuming extraction...");
 
   }
 
